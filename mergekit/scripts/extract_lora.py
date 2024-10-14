@@ -17,6 +17,7 @@ from transformers.pytorch_utils import Conv1D
 from mergekit.card import generate_card_lora
 from mergekit.common import ModelReference
 from mergekit.io import LazyTensorLoader
+from diffusers import FluxTransformer2DModel
 
 
 def low_rank_decomposition(
@@ -97,7 +98,7 @@ def get_model_details(
     """
 
     # Avoid loading weights as we won't need them
-    pretrained_model = AutoModelForCausalLM.from_pretrained(
+    pretrained_model = FluxTransformer2DModel.from_pretrained(
         model_id, state_dict={}, device_map="meta"
     )
 
@@ -247,9 +248,9 @@ def extract_lora(
         finetuned_weight = finetuned_loader.get_tensor(f"{module_name}.weight")
 
         if module_type == "to_save":
-            lora_weights[
-                f"base_model.model.{module_name}.weight"
-            ] = finetuned_weight.to("cpu").contiguous()
+            lora_weights[f"base_model.model.{module_name}.weight"] = (
+                finetuned_weight.to("cpu").contiguous()
+            )
 
             logging.info(
                 f"[{module_type}] {module_name}: output_dims=({finetuned_weight.shape})"
@@ -286,12 +287,12 @@ def extract_lora(
                     base_weight.T, finetuned_weight.T, max_rank, device=device
                 )
 
-                lora_weights[
-                    f"base_model.model.{module_name}.lora_embedding_A"
-                ] = lora_embedding_A.to("cpu").contiguous()
-                lora_weights[
-                    f"base_model.model.{module_name}.lora_embedding_B"
-                ] = lora_embedding_B.to("cpu").contiguous()
+                lora_weights[f"base_model.model.{module_name}.lora_embedding_A"] = (
+                    lora_embedding_A.to("cpu").contiguous()
+                )
+                lora_weights[f"base_model.model.{module_name}.lora_embedding_B"] = (
+                    lora_embedding_B.to("cpu").contiguous()
+                )
 
                 ranks[module_name] = lora_embedding_A.shape[0]
 
@@ -306,12 +307,12 @@ def extract_lora(
                     base_weight, finetuned_weight, max_rank, device=device
                 )
 
-                lora_weights[
-                    f"base_model.model.{module_name}.lora_A.weight"
-                ] = lora_A.to("cpu").contiguous()
-                lora_weights[
-                    f"base_model.model.{module_name}.lora_B.weight"
-                ] = lora_B.to("cpu").contiguous()
+                lora_weights[f"base_model.model.{module_name}.lora_A.weight"] = (
+                    lora_A.to("cpu").contiguous()
+                )
+                lora_weights[f"base_model.model.{module_name}.lora_B.weight"] = (
+                    lora_B.to("cpu").contiguous()
+                )
 
                 ranks[module_name] = lora_A.shape[0]
 

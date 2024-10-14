@@ -99,7 +99,7 @@ def get_model_details(
 
     # Avoid loading weights as we won't need them
     pretrained_model = FluxTransformer2DModel.from_pretrained(
-        model_id, state_dict={}, device_map="meta"
+        model_id,
     )
 
     module_details = []

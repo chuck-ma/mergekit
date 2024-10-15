@@ -47,6 +47,7 @@ class ShardedTensorIndex:
         for model_file_name in [
             "model.safetensors",
             "pytorch_model.bin",
+            "diffusion_pytorch_model.safetensors",
         ]:
             candidate_path = os.path.join(base_path, model_file_name)
             if os.path.exists(candidate_path) or os.path.exists(
@@ -56,14 +57,14 @@ class ShardedTensorIndex:
                 break
 
         if not model_path:
-            raise RuntimeError(f"Unable to find model files at {base_path}")
+            raise RuntimeError(f"无法在 {base_path} 找到模型文件")
 
         is_safetensors = model_path.endswith(".safetensors")
         tensor_paths = None
         shards = []
 
         if os.path.exists(model_path + ".index.json"):
-            # shared model - parse index
+            # 分片模型 - 解析索引
             with open(model_path + ".index.json", "r") as fd:
                 weight_map = json.load(fd)["weight_map"]
             tensor_paths = weight_map
@@ -79,12 +80,12 @@ class ShardedTensorIndex:
         elif os.path.exists(model_path):
             shard_name = os.path.basename(model_path)
 
-            # get list of tensors contained in single-file checkpoint
+            # 获取单文件检查点中包含的张量列表
             if model_path.lower().endswith(".safetensors"):
                 with safetensors.safe_open(model_path, framework="pt") as st:
                     tensor_paths = {key: shard_name for key in st.keys()}
             else:
-                # this is ugly but not much else can be done
+                # 这很丑陋，但没有其他更好的方法
                 shard = torch.load(model_path, map_location="meta")
                 if "state_dict" in shard:
                     shard = shard["state_dict"]

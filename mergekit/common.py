@@ -136,6 +136,7 @@ class ModelReference(BaseModel, frozen=True):
 
         path = self.model.path
         if not os.path.exists(path):
+            logging.info(f"Downloading {path}...")
             has_safetensors = any(
                 fn.lower().endswith(".safetensors")
                 for fn in huggingface_hub.list_repo_files(
